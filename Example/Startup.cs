@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace Example
 {
@@ -24,14 +26,20 @@ namespace Example
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDistributedMemoryCache();
+            //services.AddMvc(config =>
+            //{
+            //    var policy = new AuthorizationPolicyBuilder()
+            //                     .RequireAuthenticatedUser()
+            //                     .Build();
+            //    config.Filters.Add(new AuthorizeFilter(policy));
+            //});
 
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromSeconds(10);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
+            services.AddAuthentication("CookieAuth")
+                .AddCookie("CookieAuth", config =>
+                {
+                    config.Cookie.Name = "Grandmas.Cookie";
+                    config.LoginPath = "/User/Login";
+                });
 
             services.AddControllersWithViews();
 
@@ -58,11 +66,11 @@ namespace Example
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseSession();
-
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseAuthentication(); //who you are?
+
+            app.UseAuthorization(); //are you allowed?
 
             app.UseEndpoints(endpoints =>
             {
@@ -70,6 +78,7 @@ namespace Example
                     name: "default",
                     //pattern: "{controller=Movie}/{action=Index}/{id?}");
                     pattern: "{controller=User}/{action=Login}/{id?}");
+                //endpoints.MapDefaultControllerRoute();
             });
         }
     }

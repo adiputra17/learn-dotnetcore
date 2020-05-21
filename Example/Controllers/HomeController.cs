@@ -6,9 +6,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Example.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Example.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -23,9 +27,35 @@ namespace Example.Controllers
             return View();
         }
 
+        //[Authorize]
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        public IActionResult Authenticate()
+        {
+            var grandmaClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, "Bob"),
+                new Claim(ClaimTypes.Email, "Bob@fmail.com"),
+                new Claim("Grandma.Syas", "Very nice boy."),
+            };
+
+            var licenseClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Email, "Bob K Foo"),
+                new Claim("DrivingLicense", "A+")
+            };
+
+            var grandmaIdentity = new ClaimsIdentity(grandmaClaims, "Grandma Identity");
+            var licenseIdentity = new ClaimsIdentity(licenseClaims, "Government");
+
+            var userPrincipal = new ClaimsPrincipal(new[] { grandmaIdentity, licenseIdentity });
+
+            HttpContext.SignInAsync(userPrincipal);
+
+            return RedirectToAction("Index");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
